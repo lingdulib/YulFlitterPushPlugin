@@ -1,6 +1,8 @@
 # yulmus
 
-A new Flutter Alipush project.
+一个flutter阿里推送插件,仅支持Android和Ios系统.
+
+阿里推送文档地址 [ali-push](https://help.aliyun.com/document_detail/52906.html)
 
 ## Getting Started
 
@@ -12,6 +14,8 @@ Android and/or iOS.
 For help getting started with Flutter, view our
 [online documentation](https://flutter.dev/docs), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+### Android 端配置
 
 > Android 权限配置
 
@@ -108,4 +112,29 @@ class AliApplication : Application() {
     }
 }
 ```
+
+### IOS 端配置
+
+> Pod集成
+
+1. 在Podfile中添加source，指定Master仓库和阿里云仓库。
+
+```ruby
+source 'https://github.com/CocoaPods/Specs.git'
+source 'https://github.com/aliyun/aliyun-specs.git'
+```
+
+2. 在终端执行 `pod repo add`命令，拉取阿里云Pod仓库到本地 。
+
+```ruby
+pod repo add AliyunRepo https://github.com/aliyun/aliyun-specs.git
+```
+
+3. 在您的工程中添加以下系统依赖库。
+
+```ruby
+pod 'AlicloudPush', '~> 1.9.9'
+```
+
+> 推送权限
 
