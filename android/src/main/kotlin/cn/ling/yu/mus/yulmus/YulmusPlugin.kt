@@ -142,7 +142,7 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                             "response" to response
                         )
                     )
-                }, 2000)
+                }, 500)
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
@@ -154,7 +154,7 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                             "errorMessage" to errorMessage
                         )
                     )
-                }, 2000)
+                }, 500)
             }
         })
         val appInfo = application!!.packageManager

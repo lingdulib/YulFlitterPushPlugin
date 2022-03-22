@@ -25,7 +25,7 @@ class ThirdPushPopupActivity :AndroidPopupActivity(){
             "extras" to jsonExtras.toString()
         ))
             finish()
-        }, 1500)
+        }, 500)
 
     }
 

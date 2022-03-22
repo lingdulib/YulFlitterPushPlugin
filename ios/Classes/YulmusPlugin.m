@@ -10,15 +10,12 @@ NSString *_isSuccessful = @"isSuccessful";
 
 + (void)registerWithRegistrar:(NSObject <FlutterPluginRegistrar> *)registrar {
     FlutterMethodChannel *channel = [FlutterMethodChannel
-            methodChannelWithName:@"com.jarvanmo/rammus"
+            methodChannelWithName:@"yulmus"
                   binaryMessenger:[registrar messenger]];
     YulmusPlugin *instance = [[YulmusPlugin alloc] initWithRegistrar:registrar methodChannel:channel];
     [registrar addMethodCallDelegate:instance channel:channel];
     [registrar addApplicationDelegate:instance];
 }
-
-
-//__weak NSDictionary *_launchOptions;
 
 FlutterMethodChannel *_methodChannel;
 UNNotificationPresentationOptions _notificationPresentationOption = UNNotificationPresentationOptionNone;
@@ -71,7 +68,6 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-//    _launchOptions = launchOptions;
     [self registerAPNS:application];
     [self initCloudPush];
     [self listenerOnChannelOpened];

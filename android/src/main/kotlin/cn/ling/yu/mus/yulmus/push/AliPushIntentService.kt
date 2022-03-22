@@ -19,7 +19,7 @@ class AliPushIntentService : AliyunMessageIntentService() {
     override fun onNotificationRemoved(context: Context, messageId: String?) {
         handler.postDelayed( {
             YulmusPushHandler.methodChannel?.invokeMethod("onNotificationRemoved", messageId)
-        },1500)
+        },500)
     }
 
     override fun onNotification(context: Context, title: String?, summary: String?, extras: MutableMap<String, String>?) {
@@ -29,7 +29,7 @@ class AliPushIntentService : AliyunMessageIntentService() {
                 "summary" to summary,
                 "extras" to extras
             ))
-        },1500)
+        },500)
     }
 
     override fun onMessage(context: Context, message: CPushMessage) {
@@ -41,7 +41,7 @@ class AliPushIntentService : AliyunMessageIntentService() {
                 "title" to message.title,
                 "traceInfo" to message.traceInfo
             ))
-        },1500)
+        },500)
     }
 
     override fun onNotificationOpened(p0: Context?, title: String?, summary: String?, extras: String?) {
@@ -51,7 +51,7 @@ class AliPushIntentService : AliyunMessageIntentService() {
                 "summary" to summary,
                 "extras" to extras
             ))
-        },1500)
+        },500)
     }
 
     override fun onNotificationReceivedInApp(p0: Context?, title: String?, summary: String?, extras: MutableMap<String, String>?, openType: Int, openActivity: String?, openUrl: String?) {
@@ -64,7 +64,7 @@ class AliPushIntentService : AliyunMessageIntentService() {
                 "openActivity" to openActivity,
                 "openUrl" to openUrl
             ))
-        },1500)
+        },500)
     }
 
     override fun onNotificationClickedWithNoAction(context: Context, title: String?, summary: String?, extras: String?) {
@@ -74,6 +74,6 @@ class AliPushIntentService : AliyunMessageIntentService() {
                 "summary" to summary,
                 "extras" to extras
             ))
-        }, 1500)
+        }, 500)
     }
 }
