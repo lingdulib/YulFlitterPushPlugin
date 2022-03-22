@@ -2,8 +2,6 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint yulmus.podspec` to validate before publishing.
 #
-#source 'https://github.com/CocoaPods/Specs.git'
-#source 'https://github.com/aliyun/aliyun-specs.git'
 Pod::Spec.new do |s|
   s.name             = 'yulmus'
   s.version          = '0.0.1'
