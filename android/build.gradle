@@ -1,0 +1,70 @@
+group 'cn.ling.yu.mus.yulmus'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.6.10'
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'http://maven.aliyun.com/nexus/content/repositories/releases/'
+        }
+        maven {url 'https://developer.huawei.com/repo/'}
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'http://maven.aliyun.com/nexus/content/repositories/releases/'
+        }
+        maven {url 'https://developer.huawei.com/repo/'}
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 31
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        minSdkVersion 19
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    //主通道依赖
+    api 'com.aliyun.ams:alicloud-android-push:3.7.5'
+    //辅助通道依赖
+    api 'com.aliyun.ams:alicloud-android-third-push:3.7.4@aar'
+    //厂商通道依赖
+    implementation 'com.aliyun.ams:alicloud-android-third-push-huawei:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-xiaomi:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-oppo:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-vivo:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-meizu:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-fcm:3.7.4'
+}
