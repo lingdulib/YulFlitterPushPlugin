@@ -3,6 +3,7 @@ package cn.ling.yu.mus.yulmus.push
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.alibaba.sdk.android.push.AliyunMessageIntentService
 import com.alibaba.sdk.android.push.notification.CPushMessage
 

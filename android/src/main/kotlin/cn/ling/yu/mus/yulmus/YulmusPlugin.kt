@@ -5,13 +5,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.annotation.NonNull
 import cn.ling.yu.mus.yulmus.push.AliPushIntentService
 import cn.ling.yu.mus.yulmus.push.YulmusPushHandler
+import com.alibaba.sdk.android.push.CloudPushService
 import com.alibaba.sdk.android.push.CommonCallback
 import com.alibaba.sdk.android.push.huawei.HuaWeiRegister
 import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory
@@ -34,16 +35,52 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private val TAG: String = YulmusPlugin::javaClass.name
     private lateinit var channel: MethodChannel
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
-    private val handler=Handler(Looper.getMainLooper())
+    private val handler = Handler(Looper.getMainLooper())
 
-    companion object{
-        private var application:Application?=null
+    companion object {
+        private var application: Application? = null
+
         @JvmStatic
-        fun initPushService(application: Application){
+        fun initPushService(application: Application) {
             this.application = application
+            configNotificationManager()
             PushServiceFactory.init(application.applicationContext)
             val pushService = PushServiceFactory.getCloudPushService()
+            pushService.setLogLevel(CloudPushService.LOG_DEBUG)
             pushService.setPushIntentService(AliPushIntentService::class.java)
+        }
+
+       private fun configNotificationManager() {
+            application?.let {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val mNotificationManager =
+                        it.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val id =1.toString()
+                    val name = it.applicationInfo.name
+                    val description = "收到了一条消息,请点击看一看哟."
+                    val importance =NotificationManager.IMPORTANCE_DEFAULT
+                    val channel = NotificationChannel(id as String, name as String, importance as Int)
+                    channel.description = description as String
+                    channel.enableLights(true)
+                    channel.lightColor = Color.GREEN
+                    // 设置通知出现时的震动（如果 android 设备支持的话）
+                    // 设置通知出现时的震动（如果 android 设备支持的话）
+                    channel.enableVibration(true)
+                    channel.vibrationPattern = longArrayOf(
+                        100,
+                        200,
+                        300,
+                        400,
+                        500,
+                        400,
+                        300,
+                        200,
+                        400
+                    )
+                    mNotificationManager.createNotificationChannel(channel)
+
+                }
+            }
         }
     }
 
@@ -69,7 +106,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             "addAlias" -> addAlias(call, result)
             "removeAlias" -> removeAlias(call, result)
             "listAliases" -> listAliases(result)
-            "setupNotificationManager" -> setupNotificationManager(call, result)
             "bindPhoneNumber" -> bindPhoneNumber(call, result)
             "unbindPhoneNumber" -> unbindPhoneNumber(result)
             else -> result.notImplemented()
@@ -92,38 +128,8 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onDetachedFromActivity() {
     }
 
-    private fun setupNotificationManager(call: MethodCall, result: Result) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channels = call.arguments as List<Map<String, Any?>>
-            val mNotificationManager =
-                flutterPluginBinding.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val notificationChannels = mutableListOf<NotificationChannel>()
-            for (channel in channels) {
-                // 通知渠道的id
-                val id = channel["id"] ?: flutterPluginBinding.applicationContext.packageName
-                // 用户可以看到的通知渠道的名字.
-                val name = channel["name"] ?: flutterPluginBinding.applicationContext.packageName
-                // 用户可以看到的通知渠道的描述
-                val description =
-                    channel["description"] ?: flutterPluginBinding.applicationContext.packageName
-                val importance = channel["importance"] ?: NotificationManager.IMPORTANCE_DEFAULT
-                val mChannel = NotificationChannel(id as String, name as String, importance as Int)
-                // 配置通知渠道的属性
-                mChannel.description = description as String
-                mChannel.enableLights(true)
-                mChannel.enableVibration(true)
-                notificationChannels.add(mChannel)
-            }
-            if (notificationChannels.isNotEmpty()) {
-                mNotificationManager.createNotificationChannels(notificationChannels)
-            }
-        }
-        result.success(true)
-    }
-
     private fun register() {
         if (application == null) {
-            Log.e(TAG, "注册推送服务失败，请检查是否在运行本语句前执行了`YulmusPlugin.initPushService`.")
             return;
         }
         val pushService = PushServiceFactory.getCloudPushService()
@@ -158,7 +164,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         if ((xiaomiAppId != null && xiaomiAppId.isNotBlank())
             && (xiaomiAppKey != null && xiaomiAppKey.isNotBlank())
         ) {
-            Log.d(TAG, "正在注册小米推送服务...")
             MiPushRegister.register(
                 application!!.applicationContext,
                 xiaomiAppId,
@@ -167,7 +172,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
         val huaweiAppId = appInfo.metaData.getString("com.huawei.hms.client.appid")
         if (huaweiAppId != null && huaweiAppId.toString().isNotBlank()) {
-            Log.d(TAG, "正在注册华为推送服务...")
             HuaWeiRegister.register(application!!)
         }
         val oppoAppKey = appInfo.metaData.getString("com.oppo.push.client.app_key")
@@ -175,7 +179,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         if ((oppoAppKey != null && oppoAppKey.isNotBlank())
             && (oppoAppSecret != null && oppoAppSecret.isNotBlank())
         ) {
-            Log.d(TAG, "正在注册Oppo推送服务...")
             OppoRegister.register(application!!.applicationContext, oppoAppKey, oppoAppSecret)
         }
         val meizuAppId = appInfo.metaData.getString("com.meizu.push.client.app_id")
@@ -183,7 +186,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         if ((meizuAppId != null && meizuAppId.isNotBlank())
             && (meizuAppKey != null && meizuAppKey.isNotBlank())
         ) {
-            Log.d(TAG, "正在注册魅族推送服务...")
             MeizuRegister.register(application!!.applicationContext, meizuAppId, meizuAppKey)
         }
         val vivoAppId = appInfo.metaData.getString("com.vivo.push.app_id")
@@ -191,7 +193,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         if ((vivoAppId != null && vivoAppId.isNotBlank())
             && (vivoApiKey != null && vivoApiKey.isNotBlank())
         ) {
-            Log.d(TAG, "正在注册Vivo推送服务...")
             VivoRegister.register(application!!.applicationContext)
         }
         val gcmSendId = appInfo.metaData.getString("com.gcm.push.send_id")
@@ -199,7 +200,6 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         if ((gcmSendId != null && gcmSendId.isNotBlank())
             && (gcmApplicationId != null && gcmApplicationId.isNotBlank())
         ) {
-            Log.d(TAG, "正在注册Gcm推送服务...")
             GcmRegister.register(
                 application!!.applicationContext,
                 gcmSendId,
@@ -212,19 +212,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.turnOnPushChannel(object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -233,19 +237,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.turnOffPushChannel(object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -254,19 +262,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.checkPushChannelStatus(object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -275,19 +287,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.bindAccount(call.arguments as String?, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -297,19 +313,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.unbindAccount(object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -318,19 +338,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.bindPhoneNumber(call.arguments as String?, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -340,19 +364,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.unbindPhoneNumber(object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -370,19 +398,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
         pushService.bindTag(target, tags, alias, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -401,19 +433,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
         pushService.unbindTag(target, tags, alias, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -423,19 +459,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.listTags(target, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -446,19 +486,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.addAlias(alias, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -468,19 +512,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.removeAlias(alias, object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
@@ -489,19 +537,23 @@ class YulmusPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val pushService = PushServiceFactory.getCloudPushService()
         pushService.listAliases(object : CommonCallback {
             override fun onSuccess(response: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to true,
-                    "response" to response
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to true,
+                        "response" to response
+                    )
+                )
 
             }
 
             override fun onFailed(errorCode: String?, errorMessage: String?) {
-                result.success(mapOf(
-                    "isSuccessful" to false,
-                    "errorCode" to errorCode,
-                    "errorMessage" to errorMessage
-                ))
+                result.success(
+                    mapOf(
+                        "isSuccessful" to false,
+                        "errorCode" to errorCode,
+                        "errorMessage" to errorMessage
+                    )
+                )
             }
         })
     }
