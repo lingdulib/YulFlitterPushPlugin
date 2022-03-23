@@ -83,7 +83,6 @@ Future<dynamic> _methodCallBack(MethodCall methodCall) {
       break;
     case "onNotification":
       {
-        print("===>收到通知.<====");
         _onNotificationController.add(OnNotification(
             methodCall.arguments["title"],
             methodCall.arguments["summary"],

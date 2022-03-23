@@ -4,17 +4,6 @@
 
 阿里推送文档地址 [ali-push](https://help.aliyun.com/document_detail/52906.html)
 
-## Getting Started
-
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
 ### Android 端配置
 
 > Android 权限配置
@@ -147,5 +136,8 @@ pod repo add AliyunRepo https://github.com/aliyun/aliyun-specs.git
 pod 'AlicloudPush', '~> 1.9.9'
 ```
 
+4. 从阿里云控制台下载AliyunEmasServices-Info.plist配置文件，并正确拖入工程
+
 > 推送权限
+
 
