@@ -113,6 +113,17 @@ class AliApplication : Application() {
 }
 ```
 
+> Android Gradle文件配置
+
+```groovy
+    implementation 'com.aliyun.ams:alicloud-android-third-push-huawei:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-xiaomi:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-oppo:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-vivo:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-meizu:3.7.4'
+    implementation 'com.aliyun.ams:alicloud-android-third-push-fcm:3.7.4'
+```
+
 ### IOS 端配置
 
 > Pod集成
