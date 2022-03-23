@@ -138,6 +138,22 @@ pod 'AlicloudPush', '~> 1.9.9'
 
 4. 从阿里云控制台下载AliyunEmasServices-Info.plist配置文件，并正确拖入工程
 
-> 推送权限
+> 推送权限 info.plist
 
+```objectivec
+
+<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+    <key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.usernotifications.service</string>
+		<key>NSExtensionPrincipalClass</key>
+		<string>NotificationService</string>
+	</dict>
+
+```
 
