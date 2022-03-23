@@ -74,7 +74,7 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
     [self registerMessageReceive];
     [CloudPushSDK sendNotificationAck:launchOptions];
 
-    return NO;
+    return YES;
 }
 
 
@@ -92,7 +92,7 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
         // iOS 10 notifications
         _notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
         // 创建category，并注册到通知中心
-//        [self createCustomNotificationCategory];
+        [self createCustomNotificationCategory];
         _notificationCenter.delegate = self;
         // 请求推送权限
         [_notificationCenter requestAuthorizationWithOptions:UNAuthorizationOptionAlert | UNAuthorizationOptionBadge | UNAuthorizationOptionSound completionHandler:^(BOOL granted, NSError *_Nullable error) {
@@ -139,6 +139,21 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
             NSLog(@"User denied.");
         }
     }];
+}
+
+/**
+ *  创建并注册通知category(iOS 10+)
+ */
+- (void)createCustomNotificationCategory {
+    // 自定义`action1`和`action2`
+    UNNotificationAction *action1 = [UNNotificationAction actionWithIdentifier:@"action1" title:@"test1" options: UNNotificationActionOptionNone];
+    UNNotificationAction *action2 = [UNNotificationAction actionWithIdentifier:@"action2" title:@"test2" options: UNNotificationActionOptionNone];
+    // 创建id为`test_category`的category，并注册两个action到category
+    // UNNotificationCategoryOptionCustomDismissAction表明可以触发通知的dismiss回调
+    UNNotificationCategory *category = [UNNotificationCategory categoryWithIdentifier:@"test_category" actions:@[action1, action2] intentIdentifiers:@[] options:
+                                        UNNotificationCategoryOptionCustomDismissAction];
+    // 注册category到通知中心
+    [_notificationCenter setNotificationCategories:[NSSet setWithObjects:category, nil]];
 }
 
 /*
@@ -336,7 +351,7 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
     [self handleiOS10Notification:notification fromFront:YES];
     completionHandler(_notificationPresentationOption);
     // 通知不弹出
-//    completionHandler(UNNotificationPresentationOptionNone);
+    completionHandler(UNNotificationPresentationOptionNone);
 
     // 通知弹出，且带有声音、内容和角标
 //    completionHandler(UNNotificationPresentationOptionSound | UNNotificationPresentationOptionAlert | UNNotificationPresentationOptionBadge);
@@ -375,6 +390,47 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
     completionHandler();
 }
 
+#pragma mark Notification Open
+/*
+ *  App处于启动状态时，通知打开回调
+ */
+- (void)application:(UIApplication*)application didReceiveRemoteNotification:(NSDictionary*)userInfo {
+    NSLog(@"Receive one notification.");
+    // 取得APNS通知内容
+    NSDictionary *aps = [userInfo valueForKey:@"aps"];
+    // 内容
+    NSString *content = [aps valueForKey:@"alert"];
+    // badge数量
+    NSInteger badge = [[aps valueForKey:@"badge"] integerValue];
+    // 播放声音
+    NSString *sound = [aps valueForKey:@"sound"];
+    // 取得通知自定义字段内容，例：获取key为"Extras"的内容
+    NSString *Extras = [userInfo valueForKey:@"Extras"]; //服务端中Extras字段，key是自己定义的
+    NSLog(@"content = [%@], badge = [%ld], sound = [%@], Extras = [%@]", content, (long)badge, sound, Extras);
+    // iOS badge 清0
+    application.applicationIconBadgeNumber = 0;
+    // 同步通知角标数到服务端
+    // [self syncBadgeNum:0];
+    // 通知打开回执上报
+    // [CloudPushSDK handleReceiveRemoteNotification:userInfo];(Deprecated from v1.8.1)
+    [CloudPushSDK sendNotificationAck:userInfo];
+     NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+
+         if (content != nil) {
+             result[@"summary"] = content;
+         }
+         if (extras != nil) {
+             result[@"extras"] = [self convertToJsonData:extras];
+         }
+
+         if (badge != nil) {
+             result[@"badge"] = @(badge);
+         }
+
+     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                   [_methodChannel invokeMethod:@"onNotificationOpened" arguments:result];
+               });
+}
 
 - (void)bindAccount:(FlutterMethodCall *)call result:(FlutterResult)result {
     [CloudPushSDK bindAccount:(NSString *) call.arguments withCallback:^(CloudPushCallbackResult *res) {
@@ -410,35 +466,10 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
 
 - (void)bindPhoneNumber:(FlutterMethodCall *)call result:(FlutterResult)result {
     result(@{_isSuccessful: @YES});
-
-//    [CloudPushSDK bindAccount:(NSString *) call.arguments withCallback:^(CloudPushCallbackResult *res) {
-//        if (res.success) {
-//            if (res.data == nil) {
-//                result(@{_isSuccessful: @YES});
-//            } else {
-//                result(@{_isSuccessful: @YES, @"response": res.data});
-//
-//            };
-//        } else {
-//            result(@{_isSuccessful: @NO, @"errorCode": @(res.error.code), @"errorMessage": res.error.domain, @"iosError": [NSString stringWithFormat:@"%@", res.error]});
-//        }
-//    }];
 }
 
 - (void)unbindPhoneNumber:(FlutterMethodCall *)call result:(FlutterResult)result {
        result(@{_isSuccessful: @YES});
-//    [CloudPushSDK unbindAccount:^(CloudPushCallbackResult *res) {
-//        if (res.success) {
-//            if (res.data == nil) {
-//                result(@{_isSuccessful: @YES});
-//            } else {
-//                result(@{_isSuccessful: @YES, @"response": res.data});
-//
-//            };
-//        } else {
-//            result(@{_isSuccessful: @NO, @"errorCode": @(res.error.code), @"errorMessage": res.error.domain, @"iosError": [NSString stringWithFormat:@"%@", res.error]});
-//        }
-//    }];
 
 }
 
