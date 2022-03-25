@@ -4,6 +4,59 @@
 
 阿里推送文档地址 [ali-push](https://help.aliyun.com/document_detail/52906.html)
 
+### Flutter 应用
+
+> Flutter 使用
+
+
+
+1. 导入推送插件
+
+  ```dart
+  import 'package:yulmus/yulmus.dart' as yulalipush;
+  ```
+
+2. 在initState方法注册push
+
+```dart
+ yulalipush.invokeChannelCallBack();
+    if (!Platform.isAndroid) {
+      yulalipush.configureNotificationPresentationOption();
+    }
+    yulalipush.register();
+ yulalipush.initCloudChannelResult.listen((event) {
+      print("----------->init successful ,deviceId:${yulalipush.deviceId}");
+    });
+```
+
+3. 如果需要获得通知内容，可以再initState方法注册如下方法
+
+```dart
+
+    yulalipush.onNotification.listen((data) {
+      print("----------->接收到通知 ${data.summary}");
+    });
+    yulalipush.onNotificationOpened.listen((data) {
+      print("----------->点击了通知,内容: ${data.summary} ");
+    });
+
+    yulalipush.onNotificationRemoved.listen((data) {
+      print("----------->通知被移除, $data");
+    });
+
+    yulalipush.onNotificationReceivedInApp.listen((data) {
+      print("----------->应用内接收到通知, ${data.summary}");
+    });
+
+    yulalipush.onNotificationClickedWithNoAction.listen((data) {
+      print("----------->,无点击事件通知,${data.summary}");
+    });
+
+    yulalipush.onMessageArrived.listen((data) {
+      print("------------>,接收消息, ${data.content}");
+    });
+```
+
 ### Android 端配置
 
 > Android 权限配置
