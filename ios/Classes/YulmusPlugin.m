@@ -419,10 +419,7 @@ UNNotificationPresentationOptions _notificationPresentationOption = UNNotificati
          if (content != nil) {
              result[@"summary"] = content;
          }
-         if (extras != nil) {
-             result[@"extras"] = [self convertToJsonData:extras];
-         }
-
+        
          if (badge != nil) {
              result[@"badge"] = @(badge);
          }

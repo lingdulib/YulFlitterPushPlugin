@@ -18,6 +18,7 @@ A new Flutter project.
   s.dependency 'Flutter'
   s.dependency 'AlicloudPush', '~> 1.9.9'
   s.platform = :ios, '9.0'
+  s.static_framework = true
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
