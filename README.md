@@ -10,6 +10,11 @@
 
 1. 导入推送插件
 
+```yaml
+ yulmus:
+    git:  https://github.com/lingdulib/YulFlitterPushPlugin.git
+```
+
   ```dart
   import 'package:yulmus/yulmus.dart' as yulalipush;
   ```
